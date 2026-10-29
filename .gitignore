@@ -1,0 +1,10 @@
+# Download output and local files
+thread_*/
+downloads/
+file_links.txt
+errors.txt
+*.log
+.env
+.env.*
+Thumbs.db
+.DS_Store

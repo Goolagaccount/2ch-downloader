@@ -1,4 +1,5 @@
 param([Parameter(Mandatory=$true)][string]$Url,[Parameter(Mandatory=$true)][string]$Root)
+[Console]::OutputEncoding=[Text.Encoding]::UTF8
 $ErrorActionPreference='Stop'
 $source=Get-ChildItem -LiteralPath (Split-Path $PSScriptRoot) -Filter '2ch_downloader_*.ps1'
 $t=$null;$e=$null

@@ -10,6 +10,6 @@ if ($source.Count -ne 1) { throw 'Expected one downloader source file.' }
 $tokens=$null; $parseErrors=$null
 [void][Management.Automation.Language.Parser]::ParseFile($source[0].FullName,[ref]$tokens,[ref]$parseErrors)
 if ($parseErrors.Count) { throw ($parseErrors | Out-String) }
-Invoke-ps2exe -inputFile $source[0].FullName -outputFile (Join-Path $PSScriptRoot '2ch_downloader.exe') -noConsole:(!$Console) -STA -x64 -lcid 1033 -title '2ch downloader' -product '2ch downloader' -version '1.0.1.0'
+Invoke-ps2exe -inputFile $source[0].FullName -outputFile (Join-Path $PSScriptRoot '2ch_downloader.exe') -noConsole:(!$Console) -STA -x64 -lcid 1033 -title '2ch downloader' -product '2ch downloader' -version '1.0.2.0'
 if (-not (Test-Path -LiteralPath (Join-Path $PSScriptRoot '2ch_downloader.exe'))) { throw 'Build output missing.' }
 Get-FileHash -LiteralPath (Join-Path $PSScriptRoot '2ch_downloader.exe') -Algorithm SHA256

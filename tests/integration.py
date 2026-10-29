@@ -5,7 +5,7 @@ import pathlib
 import subprocess
 import tempfile
 import urllib.request
-from fixtures import PNG, VIDEO
+from fixtures import PNG, VIDEO, ATTACHMENTS
 
 REPO = pathlib.Path(__file__).resolve().parents[1]
 EXE = REPO / '2ch_downloader.exe'
@@ -18,6 +18,7 @@ def run(name, ids, root, **options):
     config = root.parent/(name+'.json')
     result_path = root.parent/(name+'-result.json')
     urls = [base+'/b/res/'+str(i)+'.html' for i in ids]
+    if name=='attachments_pr':urls=[u.replace('/b/res/','/pr/res/') for u in urls]
     if name == 'repeat': urls[1] += '?fixture=1#post'
     config.write_text(json.dumps(dict(Urls=urls,Root=str(root),ResultPath=str(result_path),**options)),encoding='utf-8-sig')
     proc = subprocess.Popen([str(EXE), '-TestConfiguration', str(config)])
@@ -44,6 +45,13 @@ try:
         assert (root/'thread_100/1.png').read_bytes()==PNG
         assert (root/'thread_100/2.webm').read_bytes()==VIDEO
         evidence.append('PASS clean success + query/fragment + three runs in one GUI: 2,0,0 downloaded; one result per run; byte-exact payloads; no active job/log')
+        for tid,name in [(210,'attachments_b'),(211,'attachments_pr')]:
+            rows=run(name,[tid],root)
+            assert rows[0]['Result']['Ok'] and rows[0]['Result']['Downloaded']==len(ATTACHMENTS),rows
+            folder=root/f'thread_{tid}'
+            for filename,data in ATTACHMENTS.items():assert (folder/filename).read_bytes()==data,(name,filename)
+            assert not (folder/'not-attached.txt').exists()
+            evidence.append('PASS '+name+': byte-exact PDF/text/ZIP/DOCX/media/custom extension/space filename; unrelated links and unsafe names excluded')
         rows=run('redirect',[108],root)
         assert rows[0]['Result']['Ok'] and rows[0]['Result']['Downloaded']==3, rows
         links=(root/'thread_108/file_links.txt').read_text('utf-8-sig')
@@ -70,7 +78,7 @@ try:
         for tid,name in [(404,'page404'),(107,'extension_guard')]:
             rows=run(name,[tid],root)
             assert rows[0]['Result']['Ok']==(tid==107),rows
-            if tid==107: assert rows[0]['Result']['Downloaded']==0 and not (root/'thread_107/1.jpg').exists()
+            if tid==107: assert rows[0]['Result']['Downloaded']==3 and (root/'thread_107/1.jpg.exe').exists() and not (root/'thread_107/1.jpg').exists()
             evidence.append('PASS '+name+': expected result; controls restored; job removed')
         bad=parent/'not-a-directory'; bad.write_text('fixture')
         rows=run('invalid_folder',[100],bad)
@@ -83,6 +91,7 @@ try:
         assert counts['/b/src/101/1.png']==3,counts
         for tid in [102,103,105]: assert counts[f'/b/src/{tid}/1.png']==3,counts
         assert counts['/b/src/100/1.png']==1 and counts['/b/src/100/2.webm']==1,counts
+        assert not any('not-attached' in p or p=='/outside.pdf' or p=='/script.js' or '/src/999/' in p or 'CON.txt' in p or 'errors.txt' in p for p in counts),counts
         evidence.append('PASS server request counts: retries exactly 3; repeated runs do not redownload')
     print('\n'.join(evidence))
     print('EXE SHA256 '+hashlib.sha256(EXE.read_bytes()).hexdigest())

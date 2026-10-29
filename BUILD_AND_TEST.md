@@ -62,10 +62,35 @@ also executed successfully under Windows PowerShell 5.1 (`tests/worker.ps1`).
 This is runtime integration testing, not an independent visual/manual inspection.
 It does not enumerate the user's scheduled jobs.
 
-Only neutral synthetic data from a local HTTP server were downloaded. The PNG
+The local integration suite downloads only neutral synthetic data from its HTTP server. The PNG
 is a one-pixel test image; `.webm` bytes are an explicitly synthetic transport
 fixture, not a playback test. Test data and results live in temporary folders
 outside the repository. No real imageboard content or private logs are included.
+
+## Live verification — 2026-10-29, 08:44–08:45 UTC
+
+The exact published EXE from commit
+`6082a6f4097e21b3484a9490775993657c470d06` was verified by Git blob
+`740dc48c2baf2deeba971f2430ea2dc93774eb7e` and the SHA256 above, then
+tested against `https://2ch.su/b/res/337795941.html`.
+
+- Page returned HTTP 200; five supported image links were present.
+- The actual EXE form event loop and download-button handler returned
+  `Ok=true`, `Downloaded=5`, `Skipped=0`, `Failed=0`; exit code 0.
+- Controls were restored, the own job was successfully removed and the active
+  job handle was cleared.
+- All five linked filenames existed, were nonempty and had valid PNG/JPEG
+  signatures. Total downloaded size: **1,807,705 bytes**; individual sizes:
+  151,432; 384,824; 10,588; 6,423; 1,254,438 bytes.
+- Images were opened successfully for local inspection. Images, page text and
+  machine-specific paths were not uploaded to the repository.
+
+This was an automated GUI integration run, not manual inspection of a modal
+dialog. The published loopback test entry point received one local HTTP
+redirect to this explicitly authorized live URL; the EXE itself fetched the
+real HTTPS page and media. The binary, page responses and network settings
+were not modified. No CAPTCHA, anti-bot, antivirus or network barrier was
+bypassed. No code fix or rebuild was needed.
 
 ## Scope and remaining limits
 
@@ -74,5 +99,5 @@ existing `/b/` and image/video scope. There is no automatic mirror discovery
 and no document support. Existing nonempty final files are skipped without a
 trusted hash/size check; an old partial file saved under its final name cannot
 be recognized reliably. Closing during a transfer can leave a `.part` file;
-the next attempt overwrites it. Real public mirrors, authentication, anti-bot
-pages and playback of downloaded videos were not tested. No license was added.
+the next attempt overwrites it. Authentication, anti-bot challenges and playback
+of downloaded videos were not tested. No license was added.
